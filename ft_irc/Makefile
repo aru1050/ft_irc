@@ -12,7 +12,6 @@ HEADERS = \
 
 SRCS = \
 	srcs/main.cpp \
-	srcs/server/Server.hpp \
 	srcs/server/Server.cpp \
 	srcs/server/Socket.cpp \
 	srcs/server/Poll.cpp \
