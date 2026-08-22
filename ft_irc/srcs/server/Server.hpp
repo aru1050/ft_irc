@@ -13,38 +13,42 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 #include <iostream>
+#include <cstdio>
+#include <cstdlib>
 #include <vector>
 #include <poll.h>
 #include <map>
 #include <cstring>
 #include <sys/socket.h>
 #include <exception>
+#include <netdb.h>
 
-//class Client;
-//class Channel;
+// class Client;
+// class Channel;
 
 class Server
 {
 	private:
-		int								_port;
+		std::string						_port;
 		std::string						_password;
 		int								_socketFd;
 		std::vector<struct pollfd>		_pollVec;
-		//std::map<int, Client>			_clients;
-		//std::map<std::string, Channel>	_channel;
+		// std::map<int, Client>			_clients;
+		// std::map<std::string, Channel>	_channel;
 	public:
-				Server(int port, std::string password);
+				Server(std::string port, std::string password);
 				Server(const Server &obj);
 		Server	&operator=(const Server &obj);
 				~Server();
 		
-		void	initNetwork();
+		void	ft_getaddrinfo();
+		void	initSocket();
 		void 	startLoop();
-		class SocketCreationException : public std::exception
+		class initNetworkException : public std::exception
 		{
 			public:
 				virtual const char* what() const throw(){
-					return("Error : socket creation failed");
+					return("Error : initNetwork failed !");
 				}
 		};
 };
