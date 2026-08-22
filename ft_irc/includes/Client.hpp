@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/21 16:26:40 by athamilc          #+#    #+#             */
-/*   Updated: 2026/06/21 16:26:41 by athamilc         ###   ########.fr       */
+/*   Created: 2026/08/22 16:50:55 by athamilc          #+#    #+#             */
+/*   Updated: 2026/08/22 18:56:04 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,10 @@ class Client
         bool        _hasUser;
         bool        _isRegistered;
 
-    public:
-        Client(); // Constructeur par défaut
-        ~Client(); // Destructeur
-        Client(int fd); // Constructeur avec file descriptor
+public:
+    Client(); // Constructeur par défaut
+    ~Client(); // Destructeur
+    Client(int fd); // Constructeur avec file descriptor
 
     // Retourne le file descriptor du client
     int getFd() const;

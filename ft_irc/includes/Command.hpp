@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/21 15:21:22 by athamilc          #+#    #+#             */
-/*   Updated: 2026/06/21 16:17:53 by athamilc         ###   ########.fr       */
+/*   Created: 2026/08/22 19:07:48 by athamilc          #+#    #+#             */
+/*   Updated: 2026/08/22 19:07:49 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,10 @@ class Command
     Command();
     ~Command();
     
-    void user(Client& client, const std::string& username, 
+    bool user(Client& client, const std::string& username, 
             const std::string& realname);
-    void nick(Client& client, const std::string& nickname);
-    void pass(Client& client, const std::string& password);
+    bool nick(Client& client, const std::string& nickname);
+    bool pass(Client& client, const std::string& password, const std::string& serverPassword);
 };
 
 #endif
