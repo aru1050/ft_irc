@@ -46,7 +46,27 @@ Server::~Server()
     this->_pollVec.clear();
 }
 
-void Server::initNetwork()
+void Server::ft_getaddrinfo()
+{
+	int status;
+	struct addrinfo hints;
+	struct addrinfo *servinfo;
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	status = getaddrinfo(NULL, "6667", &hints, &servinfo);
+	if (status != 0)
+	{
+		throw Server::initNetworkException();
+	}
+	std::cout<<"get address info : OK! (Port : "<<"6667"<<")"<< std::endl;
+	freeaddrinfo(servinfo);
+}
+
+void Server::initSocket()
 {
     // 1. Création de la socket IPv4 / TCP
     this->_socketFd = socket(AF_INET, SOCK_STREAM, 0);

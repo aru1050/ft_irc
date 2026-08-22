@@ -17,8 +17,9 @@ int main(int c, char **v)
 	(void) c;
 	try
 	{
-		Server Server(atoi(v[1]), v[2]);
-		Server.initNetwork();
+		Server Server(v[1], v[2]);
+		Server.ft_getaddrinfo();
+		Server.initSocket();
 	}
 	catch(const std::exception &e)
 	{
