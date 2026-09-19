@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 19:07:48 by athamilc          #+#    #+#             */
-/*   Updated: 2026/08/22 19:07:49 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/19 21:34:45 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,8 @@ class Command
             const std::string& realname);
     bool nick(Client& client, const std::string& nickname);
     bool pass(Client& client, const std::string& password, const std::string& serverPassword);
+
+    bool isValidNickname(const std::string& nickname);
 };
 
 #endif

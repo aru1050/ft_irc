@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/21 16:39:07 by athamilc          #+#    #+#             */
-/*   Updated: 2026/08/22 19:17:29 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/19 21:32:20 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,16 @@ Command::Command() {}
 
 Command::~Command() {}
 
-bool Command::pass(Client& client, const std::string& password, const std::string& serverPassword)
+bool Command::pass(Client& client, 
+                    const std::string& password, 
+                    const std::string& serverPassword)
 {
     if (client.isRegistered())
         return false;
 
+    if (client.hasPass())
+        return false;
+        
     if (password.empty())
         return false;
 
@@ -33,7 +38,28 @@ bool Command::pass(Client& client, const std::string& password, const std::strin
     if (client.isReadyToRegister())
         client.setRegistered(true);
     return true;
-    
+}
+
+bool Command::isValidNickname(const std::string& nickname)
+{
+    if (nickname.empty())
+        return false;
+
+    if (nickname[0] >= '0' && nickname[0] <= '9')
+        return false;
+
+    for (size_t i = 0; i < nickname.size(); i++)
+    {
+        char c = nickname[i];
+
+        if (!((c >= 'a' && c <= 'z') ||
+              (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') ||
+              c == '_' || c == '-'))
+            return false;
+    }
+
+    return true;
 }
 
 bool Command::nick(Client& client, const std::string& nickname)
@@ -41,10 +67,15 @@ bool Command::nick(Client& client, const std::string& nickname)
     if (nickname.empty())
         return false;
 
+    if (!isValidNickname(nickname))
+        return false;
+
     client.setNickname(nickname);
     client.setHasNick(true);
+
     if (client.isReadyToRegister())
         client.setRegistered(true);
+
     return true;
 }
 
@@ -60,21 +91,13 @@ bool Command::user(Client& client,
 
     if (username.empty() || realname.empty())
         return false;
+    
     client.setUsername(username);
     client.setRealname(realname);
     client.setHasUser(true);
+    
     if (client.isReadyToRegister())
         client.setRegistered(true);
-    
-    std::cout << "FD         : " << client.getFd() << std::endl;
-    std::cout << "Nickname   : " << client.getNickname() << std::endl;
-    std::cout << "Username   : " << client.getUsername() << std::endl;
-    std::cout << "Realname   : " << client.getRealname() << std::endl;
-    std::cout << "Password   : " << client.getPassword() << std::endl;
-    std::cout << "hasPass    : " << client.hasPass() << std::endl;
-    std::cout << "hasNick    : " << client.hasNick() << std::endl;
-    std::cout << "hasUser    : " << client.hasUser() << std::endl;
-    std::cout << "Registered : " << client.isRegistered() << std::endl;
-    
+
     return true;
 }
