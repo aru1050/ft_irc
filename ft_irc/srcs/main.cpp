@@ -39,6 +39,7 @@ int main(int c, char **v)
 	{
 		Server Server(v[1], v[2]);
 		addrinfo *res = Server.init_server(v[1]);
+		Server.startLoop();
 		freeaddrinfo(res);
 	}
 	catch(const std::exception &e)

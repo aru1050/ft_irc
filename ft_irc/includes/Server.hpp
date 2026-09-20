@@ -35,6 +35,7 @@ class Server
 		std::string						_password;
 		int								_socketFd;
 		std::vector<struct pollfd>		_pollVec;
+		bool							_running;
 		// std::map<int, Client>			_clients;
 		// std::map<std::string, Channel>	_channel;
 	public:

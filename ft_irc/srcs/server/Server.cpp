@@ -109,6 +109,44 @@ addrinfo *Server::init_server(const char *port)
 	return(res);
 }
 
-// void Server::startLoop(){
+void Server::startLoop(){
+	this->_pollVec.clear();
 
-// }
+	struct pollfd listen_fds;
+	listen_fds.fd = this->_socketFd;
+	listen_fds.events = POLLIN;
+	listen_fds.revents = 0;
+
+	this->_pollVec.push_back(listen_fds);
+	this->_running = true;
+    std::cout << "Waiting for connexions..." << std::endl;
+	while (this->_running)
+	{
+		int c = poll(&this->_pollVec[0], this->_pollVec.size(), -1);
+		if (c == -1)
+		{
+			if (this->_running == false)
+                break;
+			std::cout<<"pool: failed" << std::endl;
+			close(this->_socketFd);
+			throw Server::initNetworkException();
+		}
+		for (size_t i = 0; i < this->_pollVec.size(); ++i)
+		{
+			if (this->_pollVec[i].revents & (POLLHUP | POLLERR | POLLNVAL))
+			{
+				//deco le client
+			}
+			if (this->_pollVec[i].revents & POLLIN)
+			{
+				//accepter le client et ses donnée envoyée
+			}
+		}
+	}
+	for (size_t i = 0; i < this->_pollVec.size(); ++i)
+    {
+        if (this->_pollVec[i].fd != -1)
+            close(this->_pollVec[i].fd);
+    }
+    this->_pollVec.clear();
+}
