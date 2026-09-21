@@ -106,7 +106,72 @@ addrinfo *Server::init_server(const char *port)
 		throw Server::initNetworkException();
 	}
 	std::cout<<"listen : OK!"<< std::endl;
+	freeaddrinfo(res);
 	return(res);
+}
+
+void Server::disconnectClient(size_t i)
+{
+	int clientFd = this->_pollVec[i].fd;
+	close(clientFd);
+	this->_pollVec.erase(this->_pollVec.begin() + i);
+	std::cout << "Client on fd " << clientFd << " disconnected." << std::endl;
+}
+
+void Server::acceptNewClient()
+{
+	struct sockaddr_in clientAddr;
+	socklen_t clientLen = sizeof(clientAddr);
+
+	int newClient = accept(this->_socketFd, (struct sockaddr *)&clientAddr, &clientLen);
+	if (newClient == -1)
+	{
+		std::cout<<"accept : failed" << std::endl;
+		// attention au valgrind
+		throw Server::initNetworkException();
+	}
+	if (fcntl(newClient, F_SETFL, O_NONBLOCK) == -1)
+    {
+		std::cout<<"fcntl : failed" << std::endl;
+		// attention au valgrind
+		close(newClient);
+		throw Server::initNetworkException();
+    }
+	struct pollfd clientFd;
+	clientFd.fd = newClient;
+    clientFd.events = POLLIN;
+    clientFd.revents = 0;
+    this->_pollVec.push_back(clientFd);
+	std::cout << "New client accepted with fd " << newClient<< std::endl;
+}
+
+// Fonction a retravailler
+void Server::handleClientData(size_t i)
+{
+    char buffer[512];
+    int clientFd = this->_pollVec[i].fd;
+
+    ssize_t bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
+
+    // Cas d'erreur ou de fermeture de connexion par le client
+    if (bytesRead <= 0)
+    {
+        if (bytesRead == 0)
+            std::cout << "Le client " << clientFd << " a fermé la connexion." << std::endl;
+        else
+            perror("recv() failed");
+
+        this->disconnectClient(i);
+        return;
+    }
+
+    // Assurer la terminaison de la chaîne reçue
+    buffer[bytesRead] = '\0';
+    std::string receivedData(buffer);
+
+    // TODO: Ajouter à un buffer spécifique au client et découper par "\r\n"
+    // pour transmettre les commandes complètes à tes coéquipiers
+    std::cout << "Reçu du client " << clientFd << " : " << receivedData << std::endl;
 }
 
 void Server::startLoop(){
@@ -135,11 +200,23 @@ void Server::startLoop(){
 		{
 			if (this->_pollVec[i].revents & (POLLHUP | POLLERR | POLLNVAL))
 			{
-				//deco le client
+				this->disconnectClient(i);
+				--i;
+				continue;
 			}
 			if (this->_pollVec[i].revents & POLLIN)
 			{
-				//accepter le client et ses donnée envoyée
+				if (this->_pollVec[i].fd == this->_socketFd)
+				{
+					this->acceptNewClient();
+				}
+				else
+				{
+					size_t initialSize = this->_pollVec.size();
+					this->handleClientData(i);
+					if (this->_pollVec.size() < initialSize)
+                		--i;
+				}
 			}
 		}
 	}

@@ -44,8 +44,11 @@ class Server
 		Server	&operator=(const Server &obj);
 				~Server();
 		
-		addrinfo *init_server(const char *port);
-		void 	startLoop();
+		addrinfo 	*init_server(const char *port);
+		void 		disconnectClient(size_t i);
+		void		acceptNewClient();
+		void		handleClientData(size_t i);
+		void 		startLoop();
 		class initNetworkException : public std::exception
 		{
 			public:
