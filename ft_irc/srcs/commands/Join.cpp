@@ -6,12 +6,12 @@
 /*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 20:02:56 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 18:42:56 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/22 19:09:53 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/Command.hpp"
-#include "Channel.hpp"
+#include "../../includes/Channel.hpp"
 #include <map>
 #include <string>
 #include <iostream>

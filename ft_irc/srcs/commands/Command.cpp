@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/21 16:39:07 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/20 13:21:26 by marvin           ###   ########.fr       */
+/*   Updated: 2026/09/22 19:09:28 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Command.hpp"
+#include "../../includes/Command.hpp"
 #include <iostream>
 
 Command::Command() {}
