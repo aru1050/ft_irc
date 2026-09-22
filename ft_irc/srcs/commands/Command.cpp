@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/21 16:39:07 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/20 13:21:26 by marvin           ###   ########.fr       */
+/*   Updated: 2026/09/22 21:47:11 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,16 @@ bool Command::user(Client& client,
     
     if (client.isReadyToRegister())
         client.setRegistered(true);
+
+    return true;
+}
+
+bool Command::quit(Client& client, const std::string& reason)
+{
+    (void)reason;
+
+    if (!client.isRegistered())
+        return false;
 
     return true;
 }
