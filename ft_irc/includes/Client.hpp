@@ -6,7 +6,7 @@
 /*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:50:55 by athamilc          #+#    #+#             */
-/*   Updated: 2026/08/22 16:50:56 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/08/22 18:56:04 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ class Client
         bool        _hasUser;
         bool        _isRegistered;
 
-    public:
+public:
     Client(); // Constructeur par défaut
     ~Client(); // Destructeur
     Client(int fd); // Constructeur avec file descriptor
@@ -107,6 +107,7 @@ class Client
     // Vérifie si PASS, NICK et USER ont été reçus
     // et si le client peut être enregistré
     bool isReadyToRegister() const;
+
 };
 
 #endif
