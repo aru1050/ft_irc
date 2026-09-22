@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 19:14:42 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/22 12:35:40 by marvin           ###   ########.fr       */
+/*   Updated: 2026/09/22 22:10:15 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-// class Client;
-// class Channel;
+#include "Client.hpp"
+#include "Channel.hpp"
+#include "Command.hpp"
+
+class Client;
+class Channel;
 
 class Server
 {
@@ -36,11 +40,12 @@ class Server
 		int								_socketFd;
 		std::vector<struct pollfd>		_pollVec;
 		bool							_running;
-		// std::map<int, Client>			_clients;
-		// std::map<std::string, Channel>	_channel;
+		std::map<int, Client>			_clients;
+		std::map<std::string, Channel>	_channel;
 	public:
 				Server(std::string port, std::string password);
 				Server(const Server &obj);
+				
 		Server	&operator=(const Server &obj);
 				~Server();
 		
@@ -48,6 +53,7 @@ class Server
 		void 		disconnectClient(size_t i);
 		void		acceptNewClient();
 		void		handleClientData(size_t i);
+		void 		commandParser(int clientFd, const std::string &line);
 		void 		startLoop();
 		class initNetworkException : public std::exception
 		{
