@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:50:55 by athamilc          #+#    #+#             */
-/*   Updated: 2026/08/22 18:56:04 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/22 21:51:01 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,13 +76,13 @@ public:
     // reconstruire une commande IRC complète pouvant arriver
     // en plusieurs paquets réseau.
     void appendBuffer(const std::string& data);
-
+    
     // Vide le buffer après traitement d'une ou plusieurs commandes IRC
     void clearBuffer();
-
+    void clearBufferpos(size_t index, size_t count);
     // Vérifie si la commande PASS a déjà été reçue
     bool hasPass() const;
-
+    
     // Indique que la commande PASS a été reçue ou non
     void setHasPass(bool value);
 

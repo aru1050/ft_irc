@@ -6,7 +6,7 @@
 /*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/22 18:56:25 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/22 22:13:19 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,6 +142,7 @@ void Server::acceptNewClient()
     clientFd.events = POLLIN;
     clientFd.revents = 0;
     this->_pollVec.push_back(clientFd);
+	this->_clients[newClient] = Client(newClient);
 	std::cout << "New client accepted with fd " << newClient<< std::endl;
 }
 
@@ -162,14 +163,67 @@ void Server::handleClientData(size_t i)
         this->disconnectClient(i);
         return;
     }
-
     // Assurer la terminaison de la chaîne reçue
     buffer[bytesRead] = '\0';
     std::string receivedData(buffer);
+	
+	std::cout << "Buffer reçu du client " << clientFd << " : " << receivedData << std::endl;
+	this->_clients[clientFd].appendBuffer(receivedData);
+	size_t pos;
+	while((pos = this->_clients[clientFd].getBuffer().find("\n")) != std::string::npos)
+	{
+		std::string command = this->_clients[clientFd].getBuffer().substr(0, pos);
+		this->_clients[clientFd].clearBufferpos(0, pos + 1);
+		this->commandParser(clientFd, command);
+	}
+}
 
-    // TODO: Ajouter à un buffer spécifique au client et découper par "\r\n"
-    // pour transmettre les commandes complètes à tes coéquipiers
-    std::cout << "Reçu du client " << clientFd << " : " << receivedData << std::endl;
+void Server::commandParser(int clientFd, const std::string &line)
+{
+	(void) clientFd;
+    if (line.empty())
+        return;
+	
+	else if (line.compare(0, 5, "PASS ") == 0)
+    {
+		std::cout << "PASS" << " : " << "activated" << std::endl;
+		// a toi de jouer Aru
+    }
+    else if (line.compare(0, 5, "USER ") == 0)
+    {
+		std::cout << "USER" << " : " << "activated" << std::endl;
+        // a toi de jouer Aru
+    }
+    else if (line.compare(0, 5, "NICK ") == 0)
+    {
+		std::cout << "NICK" << " : " << "activated" << std::endl;
+        // a toi de jouer Aru
+    }
+    else if (line.compare(0, 5, "QUIT ") == 0)
+    {
+		std::cout << "QUIT" << " : " << "activated" << std::endl;
+        // a toi de jouer Aru
+    }
+    else if (line.compare(0, 5, "KICK ") == 0)
+    {
+		std::cout << "KICK" << " : " << "activated" << std::endl;
+        // a toi de jouer Vincent
+    }
+    else if (line.compare(0, 7, "INVITE ") == 0)
+    {
+		std::cout << "INVITE" << " : " << "activated" << std::endl;
+         // a toi de jouer Vincent
+    }
+    else if (line.compare(0, 5, "TOPIC ") == 0)
+    {
+		std::cout << "TOPIC" << " : " << "activated" << std::endl;
+         // a toi de jouer Vincent
+    }
+	else if (line.compare(0, 5, "MODE ") == 0)
+    {
+		std::cout << "MODE" << " : " << "activated" << std::endl;
+         // a toi de jouer Vincent
+    }
 }
 
 void Server::startLoop(){
