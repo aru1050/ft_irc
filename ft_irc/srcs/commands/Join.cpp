@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Join.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 20:02:56 by athamilc          #+#    #+#             */
-/*   Updated: 2026/08/22 20:03:36 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/22 19:09:53 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Channel.hpp"
+#include "../../includes/Command.hpp"
+#include "../../includes/Channel.hpp"
 #include <map>
 #include <string>
 #include <iostream>

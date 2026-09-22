@@ -6,11 +6,11 @@
 /*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/21 16:39:07 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 21:57:40 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/22 22:20:47 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Command.hpp"
+#include "../../includes/Command.hpp"
 #include <iostream>
 
 Command::Command() {}

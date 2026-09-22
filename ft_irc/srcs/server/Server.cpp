@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/22 12:34:59 by marvin           ###   ########.fr       */
+/*   Updated: 2026/09/22 18:56:25 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
+#include "../../includes/Server.hpp"
 
 Server::Server(std::string port, std::string password) : _port(port), _password(password), _socketFd(-1){}
 
@@ -145,7 +145,6 @@ void Server::acceptNewClient()
 	std::cout << "New client accepted with fd " << newClient<< std::endl;
 }
 
-// Fonction a retravailler
 void Server::handleClientData(size_t i)
 {
     char buffer[512];
@@ -157,10 +156,9 @@ void Server::handleClientData(size_t i)
     if (bytesRead <= 0)
     {
         if (bytesRead == 0)
-            std::cout << "Le client " << clientFd << " a fermé la connexion." << std::endl;
+            std::cout << "client " << clientFd << " has closed connection" << std::endl;
         else
             perror("recv() failed");
-
         this->disconnectClient(i);
         return;
     }

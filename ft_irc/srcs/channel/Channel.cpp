@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 19:58:52 by athamilc          #+#    #+#             */
-/*   Updated: 2026/08/22 20:02:34 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/22 19:08:27 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Channel.hpp"
+#include "../../includes/Channel.hpp"
 
 // Constructeur par défaut
 Channel::Channel()
