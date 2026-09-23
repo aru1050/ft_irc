@@ -12,6 +12,14 @@
 
 #include "../../includes/Server.hpp"
 
+bool g_serverRunning = true;
+
+void signalHandler(int signum)
+{
+    (void)signum;
+    g_serverRunning = false;
+}
+
 Server::Server(std::string port, std::string password) : _port(port), _password(password), _socketFd(-1){}
 
 Server::Server(const Server &obj)
@@ -115,6 +123,7 @@ void Server::disconnectClient(size_t i)
 	int clientFd = this->_pollVec[i].fd;
 	close(clientFd);
 	this->_pollVec.erase(this->_pollVec.begin() + i);
+	this->_clients.erase(clientFd);
 	std::cout << "Client on fd " << clientFd << " disconnected." << std::endl;
 }
 
@@ -126,16 +135,14 @@ void Server::acceptNewClient()
 	int newClient = accept(this->_socketFd, (struct sockaddr *)&clientAddr, &clientLen);
 	if (newClient == -1)
 	{
-		std::cout<<"accept : failed" << std::endl;
-		// attention au valgrind
-		throw Server::initNetworkException();
+		perror("accept() failed");
+		return;
 	}
 	if (fcntl(newClient, F_SETFL, O_NONBLOCK) == -1)
     {
-		std::cout<<"fcntl : failed" << std::endl;
-		// attention au valgrind
-		close(newClient);
-		throw Server::initNetworkException();
+		perror("fcntl() failed");
+        close(newClient);
+        return;
     }
 	struct pollfd clientFd;
 	clientFd.fd = newClient;
@@ -174,7 +181,14 @@ void Server::handleClientData(size_t i)
 	{
 		std::string command = this->_clients[clientFd].getBuffer().substr(0, pos);
 		this->_clients[clientFd].clearBufferpos(0, pos + 1);
+
+		if (!command.empty() && command[command.size() - 1] == '\r')
+            command.erase(command.size() - 1);
+
 		this->commandParser(clientFd, command);
+
+		if (this->_clients.find(clientFd) == this->_clients.end())
+            break;
 	}
 }
 
@@ -227,6 +241,10 @@ void Server::commandParser(int clientFd, const std::string &line)
 }
 
 void Server::startLoop(){
+
+	std::signal(SIGINT, signalHandler);
+    std::signal(SIGQUIT, signalHandler);
+
 	this->_pollVec.clear();
 
 	struct pollfd listen_fds;
@@ -237,7 +255,7 @@ void Server::startLoop(){
 	this->_pollVec.push_back(listen_fds);
 	this->_running = true;
     std::cout << "Waiting for connexions..." << std::endl;
-	while (this->_running)
+	while (g_serverRunning)
 	{
 		int c = poll(&this->_pollVec[0], this->_pollVec.size(), -1);
 		if (c == -1)
@@ -272,10 +290,12 @@ void Server::startLoop(){
 			}
 		}
 	}
+	std::cout << "\nShutting down server..." << std::endl;
 	for (size_t i = 0; i < this->_pollVec.size(); ++i)
     {
         if (this->_pollVec[i].fd != -1)
             close(this->_pollVec[i].fd);
     }
     this->_pollVec.clear();
+	this->_clients.clear();
 }

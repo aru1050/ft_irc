@@ -15,6 +15,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <csignal>
 #include <vector>
 #include <poll.h>
 #include <map>
@@ -31,6 +32,9 @@
 
 class Client;
 class Channel;
+
+extern bool g_serverRunning;
+void signalHandler(int signum);
 
 class Server
 {
