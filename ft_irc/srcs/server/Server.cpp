@@ -3,14 +3,23 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/22 22:58:05 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/24 20:47:41 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/Server.hpp"
+#include "../../includes/Privmsg.hpp"
+
+bool g_serverRunning = true;
+
+void signalHandler(int signum)
+{
+    (void)signum;
+    g_serverRunning = false;
+}
 
 Server::Server(std::string port, std::string password) : _port(port), _password(password), _socketFd(-1){}
 
@@ -115,6 +124,7 @@ void Server::disconnectClient(size_t i)
 	int clientFd = this->_pollVec[i].fd;
 	close(clientFd);
 	this->_pollVec.erase(this->_pollVec.begin() + i);
+	this->_clients.erase(clientFd);  // ← supprimer les informations du client quand il se déconnecte jai rejouté cette ligne
 	std::cout << "Client on fd " << clientFd << " disconnected." << std::endl;
 }
 
@@ -126,16 +136,14 @@ void Server::acceptNewClient()
 	int newClient = accept(this->_socketFd, (struct sockaddr *)&clientAddr, &clientLen);
 	if (newClient == -1)
 	{
-		std::cout<<"accept : failed" << std::endl;
-		// attention au valgrind
-		throw Server::initNetworkException();
+		perror("accept() failed");
+		return;
 	}
 	if (fcntl(newClient, F_SETFL, O_NONBLOCK) == -1)
     {
-		std::cout<<"fcntl : failed" << std::endl;
-		// attention au valgrind
-		close(newClient);
-		throw Server::initNetworkException();
+		perror("fcntl() failed");
+        close(newClient);
+        return;
     }
 	struct pollfd clientFd;
 	clientFd.fd = newClient;
@@ -174,7 +182,14 @@ void Server::handleClientData(size_t i)
 	{
 		std::string command = this->_clients[clientFd].getBuffer().substr(0, pos);
 		this->_clients[clientFd].clearBufferpos(0, pos + 1);
+
+		if (!command.empty() && command[command.size() - 1] == '\r')
+            command.erase(command.size() - 1);
+
 		this->commandParser(clientFd, command);
+
+		if (this->_clients.find(clientFd) == this->_clients.end())
+            break;
 	}
 }
 
@@ -183,50 +198,68 @@ void Server::commandParser(int clientFd, const std::string &line)
 	(void) clientFd;
     if (line.empty())
         return;
-	
+
 	else if (line.compare(0, 5, "PASS ") == 0)
+	{
+		handlePass(clientFd, line);
+		return;
+	}
+	else if (line.compare(0, 5, "USER ") == 0)
+	{
+		handleUser(clientFd, line);
+		return;
+	}
+	else if (line.compare(0, 5, "NICK ") == 0)
+	{
+		handleNick(clientFd, line);
+		return;
+	}
+	else if (line == "QUIT" || line.compare(0, 5, "QUIT ") == 0)
+	{
+		handleQuit(clientFd, line);
+		return;
+	}
+	else if (line == "PRIVMSG" || line.compare(0, 8, "PRIVMSG ") == 0)
+	{
+		handlePrivmsg(clientFd, line);
+		return;
+	}
+    else if (line == "KICK" || line.compare(0, 5, "KICK ") == 0)
     {
-		std::cout << "PASS" << " : " << "activated" << std::endl;
-		// a toi de jouer Aru
+        handleKick(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "USER ") == 0)
+	else if (line == "JOIN" || line.compare(0, 5, "JOIN ") == 0)
     {
-		std::cout << "USER" << " : " << "activated" << std::endl;
-        // a toi de jouer Aru
+        handleJoin(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "NICK ") == 0)
+    else if (line == "INVITE" || line.compare(0, 7, "INVITE ") == 0)
     {
-		std::cout << "NICK" << " : " << "activated" << std::endl;
-        // a toi de jouer Aru
+        handleInvite(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "QUIT ") == 0)
+    else if (line == "TOPIC" || line.compare(0, 6, "TOPIC ") == 0)
     {
-		std::cout << "QUIT" << " : " << "activated" << std::endl;
-        // a toi de jouer Aru
+        handleTopic(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "KICK ") == 0)
+    else if (line == "MODE" || line.compare(0, 5, "MODE ") == 0)
     {
-		std::cout << "KICK" << " : " << "activated" << std::endl;
-        // a toi de jouer Vincent
+        handleMode(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 7, "INVITE ") == 0)
-    {
-		std::cout << "INVITE" << " : " << "activated" << std::endl;
-         // a toi de jouer Vincent
-    }
-    else if (line.compare(0, 5, "TOPIC ") == 0)
-    {
-		std::cout << "TOPIC" << " : " << "activated" << std::endl;
-         // a toi de jouer Vincent
-    }
-	else if (line.compare(0, 5, "MODE ") == 0)
-    {
-		std::cout << "MODE" << " : " << "activated" << std::endl;
-         // a toi de jouer Vincent
-    }
+	else
+	{
+		std::cout << "Unknown command from client " << clientFd << ": " << line << std::endl;
+	}
 }
 
 void Server::startLoop(){
+
+	std::signal(SIGINT, signalHandler);
+    std::signal(SIGQUIT, signalHandler);
+
 	this->_pollVec.clear();
 
 	struct pollfd listen_fds;
@@ -237,7 +270,7 @@ void Server::startLoop(){
 	this->_pollVec.push_back(listen_fds);
 	this->_running = true;
     std::cout << "Waiting for connexions..." << std::endl;
-	while (this->_running)
+	while (g_serverRunning)
 	{
 		int c = poll(&this->_pollVec[0], this->_pollVec.size(), -1);
 		if (c == -1)
@@ -272,10 +305,48 @@ void Server::startLoop(){
 			}
 		}
 	}
+	std::cout << "\nShutting down server..." << std::endl;
 	for (size_t i = 0; i < this->_pollVec.size(); ++i)
     {
         if (this->_pollVec[i].fd != -1)
             close(this->_pollVec[i].fd);
     }
     this->_pollVec.clear();
+	this->_clients.clear();
+}
+
+
+void Server::sendMessage(int clientFd, const std::string &message)
+{
+    send(clientFd, message.c_str(), message.size(), 0);
+}
+
+int Server::findClientFdByNickname(const std::string &nickname) const
+{
+    std::map<int, Client>::const_iterator it;
+
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        if (it->second.getNickname() == nickname)
+            return (it->first);
+    }
+    return (-1);
+}
+
+
+std::string Server::clientPrefix(int clientFd) const
+{
+    std::map<int, Client>::const_iterator it = _clients.find(clientFd);
+
+    if (it == _clients.end())
+        return (":unknown!unknown@localhost");
+
+    std::string nick = it->second.getNickname();
+    std::string user = it->second.getUsername();
+
+    if (nick.empty())
+        nick = "*";
+    if (user.empty())
+        user = "unknown";
+    return (":" + nick + "!" + user + "@localhost");
 }

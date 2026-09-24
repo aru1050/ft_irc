@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/21 16:39:07 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 22:59:11 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/24 00:41:58 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,23 @@ bool Command::quit(Client& client, const std::string& reason)
 {
     (void)reason;
 
+    if (client.getFd() < 0)
+        return false;
+
+    return true;
+}
+
+bool Command::privmsg(Client& client,
+                      const std::string& target,
+                      const std::string& message)
+{
     if (!client.isRegistered())
+        return false;
+
+    if (target.empty())
+        return false;
+
+    if (message.empty())
         return false;
 
     return true;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 19:14:42 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/22 22:10:15 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/24 14:58:43 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <csignal>
 #include <vector>
 #include <poll.h>
 #include <map>
@@ -31,6 +32,10 @@
 
 class Client;
 class Channel;
+class Privmsg;
+
+extern bool g_serverRunning;
+void signalHandler(int signum);
 
 class Server
 {
@@ -62,6 +67,42 @@ class Server
 					return("Error : initNetwork failed !");
 				}
 		};
+		
+	void handlePass(int clientFd, const std::string& line);
+	void handleUser(int clientFd, const std::string& line);
+	void handleNick(int clientFd, const std::string& line);
+	void handleQuit(int clientFd, const std::string& line);
+	void handlePrivmsg(int clientFd, const std::string& line);
+
+	void handleJoin(int clientFd, const std::string &line);
+void handlePart(int clientFd, const std::string &line);
+void handleKick(int clientFd, const std::string &line);
+void handleInvite(int clientFd, const std::string &line);
+void handleTopic(int clientFd, const std::string &line);
+void handleMode(int clientFd, const std::string &line);
+
+bool checkChannelRegistration(int clientFd);
+
+void broadcastChannel(
+    Channel &channel,
+    const std::string &message,
+    int exceptFd);
+
+void sendChannelResult(
+    int clientFd,
+    ChannelResult result,
+    const std::string &command,
+    const std::string &channelName,
+    const std::string &target);
+
+void sendJoinState(
+    int clientFd,
+    Channel &channel);
+
+	std::string clientPrefix(int clientFd) const;
+	void sendMessage(int clientFd, const std::string &message);
+	int findClientFdByNickname(const std::string &nickname) const;
 };
 
 #endif
+

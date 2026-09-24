@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 19:07:48 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 22:30:26 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/24 14:19:34 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,17 +16,16 @@
 #include <string>
 #include "Client.hpp"
 
-
 class Command
 {
     private:
+    
     
     public:
     Command();
     ~Command();
     
-    static bool user(Client& client, const std::string& username, 
-            const std::string& realname);
+    static bool user(Client& client, const std::string& username, const std::string& realname);
     static bool nick(Client& client, const std::string& nickname);
     static bool pass(Client& client, const std::string& password, const std::string& serverPassword);
 
@@ -34,6 +33,7 @@ class Command
 
     static bool quit(Client& client, const std::string& reason);
 
+    static bool privmsg(Client& client, const std::string& target, const std::string& message);
 };
 
 #endif

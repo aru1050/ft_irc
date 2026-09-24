@@ -3,16 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 19:58:52 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 19:08:27 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/24 15:06:02 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/Channel.hpp"
 
-// Constructeur par défaut
 Channel::Channel()
     : _name(""),
       _topic(""),
@@ -25,7 +24,6 @@ Channel::Channel()
 {
 }
 
-// Constructeur avec nom du channel
 Channel::Channel(std::string name)
     : _name(name),
       _topic(""),
@@ -41,8 +39,6 @@ Channel::Channel(std::string name)
 Channel::~Channel()
 {
 }
-
-// ================= GETTERS =================
 
 std::string Channel::getName() const
 {
@@ -66,26 +62,28 @@ int Channel::getUserLimit() const
 
 int Channel::getClientCount() const
 {
-    return (_clients.size());
+    return (static_cast<int>(_clients.size()));
 }
 
-// ================= TOPIC =================
+const std::vector<int> &Channel::getClients() const
+{
+    return (_clients);
+}
 
 void Channel::setTopic(std::string topic)
 {
     _topic = topic;
 }
 
-// ================= CLIENTS =================
-
 bool Channel::hasClient(int clientFd) const
 {
     for (std::vector<int>::const_iterator it = _clients.begin();
-        it != _clients.end(); ++it)
+         it != _clients.end(); ++it)
     {
         if (*it == clientFd)
             return (true);
     }
+
     return (false);
 }
 
@@ -95,43 +93,41 @@ void Channel::addClient(int clientFd)
     {
         _clients.push_back(clientFd);
 
-        // Quand un invité rejoint, son invitation est consommée
+        // Une invitation est consommée après JOIN.
         removeInvite(clientFd);
     }
 }
+
 void Channel::removeClient(int clientFd)
 {
-    // On retire aussi ses droits secondaires
     removeOperator(clientFd);
     removeInvite(clientFd);
 
     for (std::vector<int>::iterator it = _clients.begin();
-        it != _clients.end(); ++it)
+         it != _clients.end(); ++it)
     {
         if (*it == clientFd)
         {
             _clients.erase(it);
-            return ;
+            return;
         }
     }
 }
 
-// ================= OPERATEURS =================
-
 bool Channel::isOperator(int clientFd) const
 {
     for (std::vector<int>::const_iterator it = _operators.begin();
-        it != _operators.end(); ++it)
+         it != _operators.end(); ++it)
     {
         if (*it == clientFd)
             return (true);
     }
+
     return (false);
 }
 
 void Channel::addOperator(int clientFd)
 {
-    // Un opérateur doit d'abord être membre du channel
     if (hasClient(clientFd) && !isOperator(clientFd))
         _operators.push_back(clientFd);
 }
@@ -139,26 +135,25 @@ void Channel::addOperator(int clientFd)
 void Channel::removeOperator(int clientFd)
 {
     for (std::vector<int>::iterator it = _operators.begin();
-        it != _operators.end(); ++it)
+         it != _operators.end(); ++it)
     {
         if (*it == clientFd)
         {
             _operators.erase(it);
-            return ;
+            return;
         }
     }
 }
 
-// ================= INVITATIONS =================
-
 bool Channel::isInvited(int clientFd) const
 {
     for (std::vector<int>::const_iterator it = _invitedClients.begin();
-        it != _invitedClients.end(); ++it)
+         it != _invitedClients.end(); ++it)
     {
         if (*it == clientFd)
             return (true);
     }
+
     return (false);
 }
 
@@ -171,16 +166,15 @@ void Channel::inviteClient(int clientFd)
 void Channel::removeInvite(int clientFd)
 {
     for (std::vector<int>::iterator it = _invitedClients.begin();
-        it != _invitedClients.end(); ++it)
+         it != _invitedClients.end(); ++it)
     {
         if (*it == clientFd)
         {
             _invitedClients.erase(it);
-            return ;
+            return;
         }
     }
 }
-// ================= MODE +i =================
 
 void Channel::setInviteOnly(bool value)
 {
@@ -192,8 +186,6 @@ bool Channel::isInviteOnly() const
     return (_inviteOnly);
 }
 
-// ================= MODE +t =================
-
 void Channel::setTopicRestricted(bool value)
 {
     _topicRestricted = value;
@@ -203,8 +195,6 @@ bool Channel::isTopicRestricted() const
 {
     return (_topicRestricted);
 }
-
-// ================= MODE +k =================
 
 void Channel::setPassword(std::string password)
 {
@@ -223,8 +213,6 @@ bool Channel::hasPassword() const
     return (_hasPassword);
 }
 
-// ================= MODE +l =================
-
 void Channel::setUserLimit(int limit)
 {
     _hasUserLimit = true;
@@ -242,23 +230,17 @@ bool Channel::hasUserLimit() const
     return (_hasUserLimit);
 }
 
-// ================= JOIN CHECK =================
-
 bool Channel::canJoin(int clientFd, std::string password) const
 {
-    // Déjà dans le channel
     if (hasClient(clientFd))
         return (false);
 
-    // Mode +i actif et client pas invité
     if (isInviteOnly() && !isInvited(clientFd))
         return (false);
 
-    // Mode +k actif et mauvais mot de passe
     if (hasPassword() && password != getPassword())
         return (false);
 
-    // Mode +l actif et limite atteinte
     if (hasUserLimit() && getClientCount() >= getUserLimit())
         return (false);
 

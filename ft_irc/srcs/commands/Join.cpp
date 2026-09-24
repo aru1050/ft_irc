@@ -1,125 +1,52 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Join.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/22 20:02:56 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 19:09:53 by yabou-da         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../../includes/Command.hpp"
 #include "../../includes/Channel.hpp"
-#include <map>
-#include <string>
-#include <iostream>
 
-/*
-    Cette fonction est une version pédagogique de JOIN.
-
-    Elle ne dépend pas encore de votre vraie classe Server ni Client.
-    Elle utilise :
-    - clientFd : le fd du client
-    - channelName : nom du channel, exemple "#42"
-    - password : mot de passe donné avec JOIN, exemple "secret"
-    - channels : map qui contient tous les channels du serveur
-*/
-
-void joinCommand(int clientFd,
-    std::string channelName,
-    std::string password,
+ChannelResult joinCommand(
+    int clientFd,
+    const std::string &channelName,
+    const std::string &password,
     std::map<std::string, Channel> &channels)
 {
-    // Vérifie que le nom du channel commence par #
     if (channelName.empty() || channelName[0] != '#')
-    {
-        std::cout << "Erreur : nom de channel invalide" << std::endl;
-        return ;
-    }
+        return (CHANNEL_BAD_NAME);
 
-    // Si le channel n'existe pas encore
-    if (channels.find(channelName) == channels.end())
+    std::map<std::string, Channel>::iterator it;
+
+    it = channels.find(channelName);
+
+    if (it == channels.end())
     {
-        // On crée le channel
         channels[channelName] = Channel(channelName);
 
-        // On ajoute le client dedans
         channels[channelName].addClient(clientFd);
-
-        // Le créateur devient opérateur
         channels[channelName].addOperator(clientFd);
 
-        std::cout << "Channel cree : " << channelName << std::endl;
-        std::cout << "Client " << clientFd << " rejoint "
-                  << channelName << " comme operateur" << std::endl;
-        return ;
+        return (CHANNEL_OK);
     }
 
-    // Si le channel existe déjà
-    Channel &channel = channels[channelName];
+    Channel &channel = it->second;
 
-    // On vérifie si le client a le droit de rejoindre
-    if (!channel.canJoin(clientFd, password))
+    if (channel.hasClient(clientFd))
+        return (CHANNEL_ALREADY_IN_CHANNEL);
+
+    if (channel.isInviteOnly()
+        && !channel.isInvited(clientFd))
     {
-        std::cout << "Erreur : impossible de rejoindre "
-                  << channelName << std::endl;
-        return ;
+        return (CHANNEL_INVITE_ONLY);
     }
 
-    // Si tout est bon, on ajoute le client
+    if (channel.hasPassword()
+        && channel.getPassword() != password)
+    {
+        return (CHANNEL_BAD_KEY);
+    }
+
+    if (channel.hasUserLimit()
+        && channel.getClientCount() >= channel.getUserLimit())
+    {
+        return (CHANNEL_FULL);
+    }
+
     channel.addClient(clientFd);
 
-    std::cout << "Client " << clientFd
-              << " rejoint " << channelName << std::endl;
+    return (CHANNEL_OK);
 }
-
-// #include "Channel.hpp"
-// #include <map>
-// #include <string>
-// #include <iostream>
-
-// /*
-//     Version pédagogique de PART.
-
-//     clientFd    = fd du client qui veut quitter
-//     channelName = nom du channel à quitter
-//     channels    = liste de tous les channels du serveur
-// */
-
-// void partCommand(int clientFd,
-//     std::string channelName,
-//     std::map<std::string, Channel> &channels)
-// {
-//     if (channelName.empty() || channelName[0] != '#')
-//     {
-//         std::cout << "Erreur : nom de channel invalide" << std::endl;
-//         return ;
-//     }
-
-//     if (channels.find(channelName) == channels.end())
-//     {
-//         std::cout << "Erreur : channel inexistant" << std::endl;
-//         return ;
-//     }
-
-//     Channel &channel = channels[channelName];
-
-//     if (!channel.hasClient(clientFd))
-//     {
-//         std::cout << "Erreur : client pas dans le channel" << std::endl;
-//         return ;
-//     }
-
-//     channel.removeClient(clientFd);
-
-//     std::cout << "Client " << clientFd
-//               << " quitte " << channelName << std::endl;
-
-//     if (channel.getClientCount() == 0)
-//     {
-//         channels.erase(channelName);
-//         std::cout << "Channel supprime car vide" << std::endl;
-//     }
-// }

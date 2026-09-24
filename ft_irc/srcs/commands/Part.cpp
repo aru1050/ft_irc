@@ -1,11 +1,13 @@
 #include "../../includes/Channel.hpp"
 
-ChannelResult inviteCommand(
+ChannelResult partCommand(
     int clientFd,
-    int targetFd,
     const std::string &channelName,
     std::map<std::string, Channel> &channels)
 {
+    if (channelName.empty() || channelName[0] != '#')
+        return (CHANNEL_BAD_NAME);
+
     std::map<std::string, Channel>::iterator it;
 
     it = channels.find(channelName);
@@ -13,18 +15,13 @@ ChannelResult inviteCommand(
     if (it == channels.end())
         return (CHANNEL_NO_SUCH_CHANNEL);
 
-    Channel &channel = it->second;
-
-    if (!channel.hasClient(clientFd))
+    if (!it->second.hasClient(clientFd))
         return (CHANNEL_NOT_ON_CHANNEL);
 
-    if (!channel.isOperator(clientFd))
-        return (CHANNEL_NOT_OPERATOR);
+    it->second.removeClient(clientFd);
 
-    if (channel.hasClient(targetFd))
-        return (CHANNEL_TARGET_ALREADY_IN_CHANNEL);
-
-    channel.inviteClient(targetFd);
+    if (it->second.getClientCount() == 0)
+        channels.erase(it);
 
     return (CHANNEL_OK);
 }
