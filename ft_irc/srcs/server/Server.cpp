@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/24 20:47:41 by marvin           ###   ########.fr       */
+/*   Updated: 2026/09/25 20:21:02 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -232,6 +232,11 @@ void Server::commandParser(int clientFd, const std::string &line)
 	else if (line == "JOIN" || line.compare(0, 5, "JOIN ") == 0)
     {
         handleJoin(clientFd, line);
+        return;
+    }
+	else if (line == "PART" || line.compare(0, 5, "PART ") == 0)
+    {
+        handlePart(clientFd, line);
         return;
     }
     else if (line == "INVITE" || line.compare(0, 7, "INVITE ") == 0)
