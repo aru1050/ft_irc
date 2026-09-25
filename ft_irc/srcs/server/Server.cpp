@@ -6,7 +6,7 @@
 /*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/25 20:21:02 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/25 20:34:04 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ addrinfo *Server::init_server(const char *port)
 		throw Server::initNetworkException();
 	}
 	std::cout<<"listen : OK!"<< std::endl;
-	freeaddrinfo(res);
+	// freeaddrinfo(res); a retirer pour eviter la double liberation
 	return(res);
 }
 
