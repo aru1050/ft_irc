@@ -307,6 +307,28 @@ void Server::startLoop(){
                 		--i;
 				}
 			}
+			if (this->_pollVec[i].revents & POLLOUT)
+			{
+				int clientFd = this->_pollVec[i].fd;
+				std::string recivedbuffer = this->_clients[clientFd].getBuffer();
+
+				if(!recivedbuffer.empty())
+				{
+					size_t sent = send(clientFd, recivedbuffer.c_str(), recivedbuffer.size(), 0);
+					if (sent > 0){
+						recivedbuffer.erase(0, sent);
+					}
+					else if ((int)sent == -1){
+						this->disconnectClient(i);
+						--i;
+						continue;
+					}
+					if (recivedbuffer.empty())
+					{
+						this->_pollVec[i].events &= ~POLLOUT;
+					}
+				}
+			}
 		}
 	}
 	std::cout << "\nShutting down server..." << std::endl;
