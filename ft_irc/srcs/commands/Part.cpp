@@ -1,24 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Topic.cpp                                          :+:      :+:    :+:   */
+/*   Part.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/09/25 20:25:07 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/25 20:25:08 by athamilc         ###   ########.fr       */
+/*   Created: 2026/09/25 20:25:41 by athamilc          #+#    #+#             */
+/*   Updated: 2026/09/25 20:25:42 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/Channel.hpp"
 
-ChannelResult topicCommand(
+ChannelResult partCommand(
     int clientFd,
     const std::string &channelName,
-    const std::string &newTopic,
-    bool changeTopic,
     std::map<std::string, Channel> &channels)
 {
+    if (channelName.empty() || channelName[0] != '#')
+        return (CHANNEL_BAD_NAME);
+
     std::map<std::string, Channel>::iterator it;
 
     it = channels.find(channelName);
@@ -26,21 +27,13 @@ ChannelResult topicCommand(
     if (it == channels.end())
         return (CHANNEL_NO_SUCH_CHANNEL);
 
-    Channel &channel = it->second;
-
-    if (!channel.hasClient(clientFd))
+    if (!it->second.hasClient(clientFd))
         return (CHANNEL_NOT_ON_CHANNEL);
 
-    if (!changeTopic)
-        return (CHANNEL_OK);
+    it->second.removeClient(clientFd);
 
-    if (channel.isTopicRestricted()
-        && !channel.isOperator(clientFd))
-    {
-        return (CHANNEL_NOT_OPERATOR);
-    }
-
-    channel.setTopic(newTopic);
+    if (it->second.getClientCount() == 0)
+        channels.erase(it);
 
     return (CHANNEL_OK);
 }

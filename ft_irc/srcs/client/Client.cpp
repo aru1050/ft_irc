@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/20 19:16:20 by athamilc          #+#    #+#             */
-/*   Updated: 2026/06/20 19:16:24 by athamilc         ###   ########.fr       */
+/*   Created: 2026/08/22 18:58:22 by athamilc          #+#    #+#             */
+/*   Updated: 2026/09/22 21:50:38 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Client.hpp"
+#include "../../includes/Client.hpp"
 
 Client::Client()
     : _fd(-1),
@@ -112,6 +112,11 @@ void Client::appendBuffer(const std::string& data)
 void Client::clearBuffer()
 {
     _buffer.clear();
+}
+
+void Client::clearBufferpos(size_t index, size_t count)
+{
+    _buffer.erase(index, count);
 }
 
 bool Client::hasPass() const

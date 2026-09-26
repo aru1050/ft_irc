@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/08/22 16:50:55 by athamilc          #+#    #+#             */
+/*   Updated: 2026/09/22 21:51:01 by yabou-da         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
@@ -19,7 +31,7 @@ class Client
         bool        _hasUser;
         bool        _isRegistered;
 
-    public:
+public:
     Client(); // Constructeur par défaut
     ~Client(); // Destructeur
     Client(int fd); // Constructeur avec file descriptor
@@ -64,13 +76,13 @@ class Client
     // reconstruire une commande IRC complète pouvant arriver
     // en plusieurs paquets réseau.
     void appendBuffer(const std::string& data);
-
+    
     // Vide le buffer après traitement d'une ou plusieurs commandes IRC
     void clearBuffer();
-
+    void clearBufferpos(size_t index, size_t count);
     // Vérifie si la commande PASS a déjà été reçue
     bool hasPass() const;
-
+    
     // Indique que la commande PASS a été reçue ou non
     void setHasPass(bool value);
 
@@ -95,6 +107,7 @@ class Client
     // Vérifie si PASS, NICK et USER ont été reçus
     // et si le client peut être enregistré
     bool isReadyToRegister() const;
+
 };
 
 #endif
