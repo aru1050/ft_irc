@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 19:57:25 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 18:40:18 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/24 15:06:17 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,35 +15,24 @@
 
 # include <string>
 # include <vector>
+# include <map>
 
 class Channel
 {
     private:
-        // Nom du channel : #42, #general, etc.
         std::string _name;
-
-        // Sujet du channel
         std::string _topic;
 
-        // Liste des clients présents dans le channel
         std::vector<int> _clients;
-
-        // Liste des opérateurs du channel
         std::vector<int> _operators;
-
-        // Liste des clients invités pour le mode +i
         std::vector<int> _invitedClients;
 
-        // Mode +i : channel accessible uniquement sur invitation
         bool _inviteOnly;
-        // Mode +t : seul un opérateur peut changer le topic
         bool _topicRestricted;
 
-        // Mode +k : mot de passe obligatoire
         bool _hasPassword;
         std::string _password;
 
-        // Mode +l : limite d'utilisateurs
         bool _hasUserLimit;
         int _userLimit;
 
@@ -55,8 +44,11 @@ class Channel
         std::string getName() const;
         std::string getTopic() const;
         std::string getPassword() const;
+
         int getUserLimit() const;
         int getClientCount() const;
+
+        const std::vector<int> &getClients() const;
 
         void setTopic(std::string topic);
 
@@ -86,8 +78,76 @@ class Channel
         void removeUserLimit();
         bool hasUserLimit() const;
 
-        // Vérifie si un client a le droit de rejoindre le channel
         bool canJoin(int clientFd, std::string password) const;
 };
+
+enum ChannelResult
+{
+    CHANNEL_OK = 0,
+
+    CHANNEL_BAD_NAME,
+    CHANNEL_NO_SUCH_CHANNEL,
+
+    CHANNEL_ALREADY_IN_CHANNEL,
+    CHANNEL_NOT_ON_CHANNEL,
+
+    CHANNEL_INVITE_ONLY,
+    CHANNEL_BAD_KEY,
+    CHANNEL_FULL,
+
+    CHANNEL_NOT_OPERATOR,
+
+    CHANNEL_TARGET_ALREADY_IN_CHANNEL,
+    CHANNEL_TARGET_NOT_ON_CHANNEL,
+
+    CHANNEL_BAD_MODE,
+    CHANNEL_BAD_LIMIT,
+    CHANNEL_MISSING_ARGUMENT
+};
+
+ChannelResult joinCommand(
+    int clientFd,
+    const std::string &channelName,
+    const std::string &password,
+    std::map<std::string, Channel> &channels
+);
+
+ChannelResult partCommand(
+    int clientFd,
+    const std::string &channelName,
+    std::map<std::string, Channel> &channels
+);
+
+ChannelResult inviteCommand(
+    int clientFd,
+    int targetFd,
+    const std::string &channelName,
+    std::map<std::string, Channel> &channels
+);
+
+ChannelResult kickCommand(
+    int clientFd,
+    int targetFd,
+    const std::string &channelName,
+    std::map<std::string, Channel> &channels
+);
+
+ChannelResult topicCommand(
+    int clientFd,
+    const std::string &channelName,
+    const std::string &newTopic,
+    bool changeTopic,
+    std::map<std::string, Channel> &channels
+);
+
+ChannelResult modeCommand(
+    int clientFd,
+    const std::string &channelName,
+    char sign,
+    char mode,
+    const std::string &argument,
+    int targetFd,
+    std::map<std::string, Channel> &channels
+);
 
 #endif

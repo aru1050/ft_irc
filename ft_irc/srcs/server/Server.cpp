@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
+/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/22 22:13:19 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/25 20:34:04 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/Server.hpp"
+#include "../../includes/Privmsg.hpp"
 
 bool g_serverRunning = true;
 
@@ -35,15 +36,15 @@ Server &Server::operator=(const Server &obj)
 		this->_password = obj._password;
 		this->_socketFd = obj._socketFd;
 		this->_pollVec= obj._pollVec;
-		// this->_clients = obj._clients;
-		// this->_channel = obj._channel;
+		this->_clients = obj._clients;
+		this->_channel = obj._channel;
 	}
 	return(*this);
 }
 
 Server::~Server(){}
 
-addrinfo *Server::init_server(const char *port)
+void Server::init_server(const char *port)
 {
 	int status;
 	struct addrinfo hints;
@@ -115,7 +116,6 @@ addrinfo *Server::init_server(const char *port)
 	}
 	std::cout<<"listen : OK!"<< std::endl;
 	freeaddrinfo(res);
-	return(res);
 }
 
 void Server::disconnectClient(size_t i)
@@ -197,47 +197,66 @@ void Server::commandParser(int clientFd, const std::string &line)
 	(void) clientFd;
     if (line.empty())
         return;
-	
+
 	else if (line.compare(0, 5, "PASS ") == 0)
+	{
+		handlePass(clientFd, line);
+		return;
+	}
+	else if (line.compare(0, 5, "USER ") == 0)
+	{
+		handleUser(clientFd, line);
+		return;
+	}
+	else if (line.compare(0, 5, "NICK ") == 0)
+	{
+		handleNick(clientFd, line);
+		return;
+	}
+	else if (line == "QUIT" || line.compare(0, 5, "QUIT ") == 0)
+	{
+		handleQuit(clientFd, line);
+		return;
+	}
+	else if (line == "PRIVMSG" || line.compare(0, 8, "PRIVMSG ") == 0)
+	{
+		handlePrivmsg(clientFd, line);
+		return;
+	}
+    else if (line == "KICK" || line.compare(0, 5, "KICK ") == 0)
     {
-		std::cout << "PASS" << " : " << "activated" << std::endl;
-		// a toi de jouer Aru
+        handleKick(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "USER ") == 0)
+	else if (line == "JOIN" || line.compare(0, 5, "JOIN ") == 0)
     {
-		std::cout << "USER" << " : " << "activated" << std::endl;
-        // a toi de jouer Aru
+        handleJoin(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "NICK ") == 0)
+	else if (line == "PART" || line.compare(0, 5, "PART ") == 0)
     {
-		std::cout << "NICK" << " : " << "activated" << std::endl;
-        // a toi de jouer Aru
+        handlePart(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "QUIT ") == 0)
+    else if (line == "INVITE" || line.compare(0, 7, "INVITE ") == 0)
     {
-		std::cout << "QUIT" << " : " << "activated" << std::endl;
-        // a toi de jouer Aru
+        handleInvite(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "KICK ") == 0)
+    else if (line == "TOPIC" || line.compare(0, 6, "TOPIC ") == 0)
     {
-		std::cout << "KICK" << " : " << "activated" << std::endl;
-        // a toi de jouer Vincent
+        handleTopic(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 7, "INVITE ") == 0)
+    else if (line == "MODE" || line.compare(0, 5, "MODE ") == 0)
     {
-		std::cout << "INVITE" << " : " << "activated" << std::endl;
-         // a toi de jouer Vincent
+        handleMode(clientFd, line);
+        return;
     }
-    else if (line.compare(0, 5, "TOPIC ") == 0)
-    {
-		std::cout << "TOPIC" << " : " << "activated" << std::endl;
-         // a toi de jouer Vincent
-    }
-	else if (line.compare(0, 5, "MODE ") == 0)
-    {
-		std::cout << "MODE" << " : " << "activated" << std::endl;
-         // a toi de jouer Vincent
-    }
+	else
+	{
+		std::cout << "Unknown command from client " << clientFd << ": " << line << std::endl;
+	}
 }
 
 void Server::startLoop(){
@@ -298,4 +317,40 @@ void Server::startLoop(){
     }
     this->_pollVec.clear();
 	this->_clients.clear();
+}
+
+
+void Server::sendMessage(int clientFd, const std::string &message)
+{
+    send(clientFd, message.c_str(), message.size(), 0);
+}
+
+int Server::findClientFdByNickname(const std::string &nickname) const
+{
+    std::map<int, Client>::const_iterator it;
+
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        if (it->second.getNickname() == nickname)
+            return (it->first);
+    }
+    return (-1);
+}
+
+
+std::string Server::clientPrefix(int clientFd) const
+{
+    std::map<int, Client>::const_iterator it = _clients.find(clientFd);
+
+    if (it == _clients.end())
+        return (":unknown!unknown@localhost");
+
+    std::string nick = it->second.getNickname();
+    std::string user = it->second.getUsername();
+
+    if (nick.empty())
+        nick = "*";
+    if (user.empty())
+        user = "unknown";
+    return (":" + nick + "!" + user + "@localhost");
 }

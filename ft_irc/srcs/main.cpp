@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 19:05:02 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 12:34:02 by marvin           ###   ########.fr       */
+/*   Updated: 2026/09/24 20:43:26 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,21 +15,26 @@
 #include <cstdlib>   // Pour atoi
 #include <csignal>   // Pour sigaction, SIGINT
 
+
 int main(int c, char **v)
 {
 	if (c != 3)
-    {
-        std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
-        return 1;
-    }
+	{
+		std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
+		return 1;
+	}
 
-    int port = atoi(v[1]);
-    if (port <= 1024 || port > 65535)
-    {
-        std::cerr << "Erreur: Port invalide (utiliser une valeur entre 1025 et 65535)." << std::endl;
-        return 1;
-    }
+	int port = atoi(v[1]);
+
+	if (port <= 1024 || port > 65535)
+	{
+		std::cerr << "Erreur: Port invalide (utiliser une valeur entre 1025 et 65535)." << std::endl;
+		return 1;
+	}
+
     std::string password = v[2];
+
+
     if (password.empty())
     {
         std::cerr << "Erreur: Le mot de passe ne peut pas être vide." << std::endl;
@@ -37,18 +42,20 @@ int main(int c, char **v)
     }
 	try
 	{
-		Server Server(v[1], v[2]);
-		addrinfo *res = Server.init_server(v[1]);
-		Server.startLoop();
-		freeaddrinfo(res);
+		Server server(v[1], v[2]);
+
+		server.init_server(v[1]);
+		server.startLoop();
 	}
-	catch(const std::exception &e)
+	catch (const std::exception &e)
 	{
 		std::cerr << e.what() << std::endl;
-		return(1);
+		return 1;
 	}
-	return(0);
+
+	return 0;
 }
+
 
 // Server *g_serverPtr = NULL;
 

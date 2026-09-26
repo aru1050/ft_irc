@@ -8,25 +8,24 @@ HEADERS = \
 	includes/Client.hpp \
 	includes/Channel.hpp \
 	includes/Command.hpp \
-	includes/Utils.hpp
+	includes/Privmsg.hpp \
+	includes/Quit.hpp 
 
 SRCS = \
 	srcs/main.cpp \
 	srcs/server/Server.cpp \
 	srcs/client/Client.cpp \
-	srcs/client/Authentication.cpp \
 	srcs/channel/Channel.cpp \
 	srcs/channel/Invite.cpp \
 	srcs/channel/Kick.cpp \
 	srcs/channel/Topic.cpp \
 	srcs/commands/Command.cpp \
 	srcs/commands/Join.cpp \
+	srcs/commands/Part.cpp \
 	srcs/commands/Privmsg.cpp \
 	srcs/commands/Mode.cpp \
 	srcs/commands/Quit.cpp \
-	srcs/utils/Parser.cpp \
-	srcs/utils/Replies.cpp \
-	srcs/utils/Utils.cpp
+	srcs/utils/Parser.cpp 
 
 OBJS = $(SRCS:.cpp=.o)
 

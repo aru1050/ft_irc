@@ -1,14 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Authentication.cpp                                 :+:      :+:    :+:   */
+/*   Quit.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/20 15:15:44 by athamilc          #+#    #+#             */
-/*   Updated: 2026/09/22 19:07:14 by yabou-da         ###   ########.fr       */
+/*   Created: 2026/09/24 15:15:04 by marvin            #+#    #+#             */
+/*   Updated: 2026/09/24 15:15:05 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-//#include "../16/"
+#ifndef QUIT_HPP
+# define QUIT_HPP
 
+# include <map>
+# include <string>
+
+# include "Channel.hpp"
+
+void quitCommand(
+    int clientFd,
+    std::map<std::string, Channel> &channels
+);
+
+#endif
