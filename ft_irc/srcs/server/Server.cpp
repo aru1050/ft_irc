@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/25 20:34:04 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/27 14:15:05 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,68 +194,49 @@ void Server::handleClientData(size_t i)
 
 void Server::commandParser(int clientFd, const std::string &line)
 {
-	(void) clientFd;
-    if (line.empty())
-        return;
-
-	else if (line.compare(0, 5, "PASS ") == 0)
+	if (line.empty())
 	{
+		return;
+	}
+	std::string command = line;
+	size_t space = command.find(' ');
+	if (space != std::string::npos)
+	{
+		command = command.substr(0, space);
+	}
+	for (size_t i = 0; i < command.size(); ++i)
+	{
+		if (command[i] >= 'a' && command[i] <= 'z')
+		{
+			command[i] = command[i] - 'a' + 'A';
+		}
+	}
+	if (command == "PASS")
 		handlePass(clientFd, line);
-		return;
-	}
-	else if (line.compare(0, 5, "USER ") == 0)
-	{
-		handleUser(clientFd, line);
-		return;
-	}
-	else if (line.compare(0, 5, "NICK ") == 0)
-	{
+	else if (command == "NICK")
 		handleNick(clientFd, line);
-		return;
-	}
-	else if (line == "QUIT" || line.compare(0, 5, "QUIT ") == 0)
-	{
+	else if (command == "USER")
+		handleUser(clientFd, line);
+	else if (command == "QUIT")
 		handleQuit(clientFd, line);
-		return;
-	}
-	else if (line == "PRIVMSG" || line.compare(0, 8, "PRIVMSG ") == 0)
-	{
+	else if (command == "PRIVMSG")
 		handlePrivmsg(clientFd, line);
-		return;
-	}
-    else if (line == "KICK" || line.compare(0, 5, "KICK ") == 0)
-    {
-        handleKick(clientFd, line);
-        return;
-    }
-	else if (line == "JOIN" || line.compare(0, 5, "JOIN ") == 0)
-    {
-        handleJoin(clientFd, line);
-        return;
-    }
-	else if (line == "PART" || line.compare(0, 5, "PART ") == 0)
-    {
-        handlePart(clientFd, line);
-        return;
-    }
-    else if (line == "INVITE" || line.compare(0, 7, "INVITE ") == 0)
-    {
-        handleInvite(clientFd, line);
-        return;
-    }
-    else if (line == "TOPIC" || line.compare(0, 6, "TOPIC ") == 0)
-    {
-        handleTopic(clientFd, line);
-        return;
-    }
-    else if (line == "MODE" || line.compare(0, 5, "MODE ") == 0)
-    {
-        handleMode(clientFd, line);
-        return;
-    }
+	else if (command == "KICK")
+		handleKick(clientFd, line);
+	else if (command == "JOIN")
+		handleJoin(clientFd, line);
+	else if (command == "PART")
+		handlePart(clientFd, line);
+	else if (command == "INVITE")
+		handleInvite(clientFd, line);
+	else if (command == "TOPIC")
+		handleTopic(clientFd, line);
+	else if (command == "MODE")
+		handleMode(clientFd, line);
 	else
 	{
-		std::cout << "Unknown command from client " << clientFd << ": " << line << std::endl;
+		std::cout << "Unknown command from client "
+				<< clientFd << ": " << line << std::endl;
 	}
 }
 
@@ -347,18 +328,31 @@ void Server::sendMessage(int clientFd, const std::string &message)
     send(clientFd, message.c_str(), message.size(), 0);
 }
 
+static std::string toLowerNickname(const std::string& str)
+{
+    std::string result = str;
+
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        if (result[i] >= 'A' && result[i] <= 'Z')
+            result[i] = result[i] - 'A' + 'a';
+    }
+
+    return result;
+}
+
 int Server::findClientFdByNickname(const std::string &nickname) const
 {
     std::map<int, Client>::const_iterator it;
 
     for (it = _clients.begin(); it != _clients.end(); ++it)
     {
-        if (it->second.getNickname() == nickname)
+        if (toLowerNickname(it->second.getNickname())
+            == toLowerNickname(nickname))
             return (it->first);
     }
     return (-1);
 }
-
 
 std::string Server::clientPrefix(int clientFd) const
 {

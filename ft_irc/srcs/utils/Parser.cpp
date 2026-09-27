@@ -17,19 +17,73 @@
 
 void Server::handlePass(int clientFd, const std::string& line)
 {
+	if (line.size() <= 5)
+	{
+		std::cout << "PASS : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 461 * PASS :Not enough parameters\r\n"
+		);
+		return;
+	}
+
 	std::string password = line.substr(5);
 
 	Client& client = this->_clients[clientFd];
+
+	if (client.isRegistered() || client.hasPass())
+	{
+		std::cout << "PASS : ERROR (already registered)" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 462 * :You may not reregister\r\n"
+		);
+		return;
+	}
+
 	Command command;
 
 	if (command.pass(client, password, this->_password))
 		std::cout << "PASS : OK" << std::endl;
 	else
+	{
 		std::cout << "PASS : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 464 * :Password incorrect\r\n"
+		);
+	}
 }
 
 void Server::handleUser(int clientFd, const std::string& line)
 {
+	Client& client = this->_clients[clientFd];
+
+	if (client.isRegistered() || client.hasUser())
+	{
+		std::cout << "USER : ERROR (already registered)" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 462 * :You may not reregister\r\n"
+		);
+		return;
+	}
+
+	if (line.size() <= 5)
+	{
+		std::cout << "USER : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 461 * USER :Not enough parameters\r\n"
+		);
+		return;
+	}
+
 	std::string params = line.substr(5);
 
 	size_t space = params.find(' ');
@@ -38,23 +92,71 @@ void Server::handleUser(int clientFd, const std::string& line)
 	if (space == std::string::npos || colon == std::string::npos)
 	{
 		std::cout << "USER : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 461 * USER :Not enough parameters\r\n"
+		);
 		return;
 	}
 
 	std::string username = params.substr(0, space);
 	std::string realname = params.substr(colon + 1);
 
-	Client& client = this->_clients[clientFd];
+	if (username.empty() || realname.empty())
+	{
+		std::cout << "USER : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 461 * USER :Not enough parameters\r\n"
+		);
+		return;
+	}
+
 	Command command;
 
 	if (command.user(client, username, realname))
+	{
 		std::cout << "USER : OK" << std::endl;
+	}
 	else
+	{
 		std::cout << "USER : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 461 * USER :Not enough parameters\r\n"
+		);
+	}
+}
+
+static std::string toLowerNickname(const std::string& str)
+{
+	std::string result = str;
+
+	for (size_t i = 0; i < result.size(); ++i)
+	{
+		if (result[i] >= 'A' && result[i] <= 'Z')
+			result[i] = result[i] - 'A' + 'a';
+	}
+
+	return result;
 }
 
 void Server::handleNick(int clientFd, const std::string& line)
 {
+	if (line.size() <= 5)
+	{
+		std::cout << "NICK : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 431 * :No nickname given\r\n"
+		);
+		return;
+	}
+
 	std::string nickname = line.substr(5);
 
 	Client& client = this->_clients[clientFd];
@@ -64,17 +166,48 @@ void Server::handleNick(int clientFd, const std::string& line)
 		it != this->_clients.end(); ++it)
 	{
 		if (it->first != clientFd &&
-			it->second.getNickname() == nickname)
+			toLowerNickname(it->second.getNickname()) == toLowerNickname(nickname))
 		{
 			std::cout << "NICK : ERROR (already used)" << std::endl;
+
+			sendMessage(
+				clientFd,
+				":ircserv 433 * " + nickname + " :Nickname is already in use\r\n"
+			);
+
 			return;
 		}
 	}
 
+	std::string oldPrefix = clientPrefix(clientFd);
+	std::string oldNickname = client.getNickname();
+
 	if (command.nick(client, nickname))
+	{
 		std::cout << "NICK : OK" << std::endl;
+
+		if (!oldNickname.empty())
+		{
+			std::string message = oldPrefix
+				+ " NICK :" + nickname + "\r\n";
+
+			for (std::map<int, Client>::iterator it = this->_clients.begin();
+				it != this->_clients.end(); ++it)
+			{
+				if (it->first != clientFd)
+					sendMessage(it->first, message);
+			}
+		}
+	}
 	else
+	{
 		std::cout << "NICK : ERROR" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 432 * " + nickname + " :Erroneous nickname\r\n"
+		);
+	}
 }
 
 void Server::handleQuit(int clientFd, const std::string& line)
@@ -164,11 +297,35 @@ void Server::handlePrivmsg(int clientFd, const std::string& line)
 	if (line.size() > 8)
 		params = line.substr(8);
 
+	// PRIVMSG sans destinataire
+	if (params.empty())
+	{
+		std::cout << "PRIVMSG : ERROR (no recipient)" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 411 "
+			+ client.getNickname()
+			+ " :No recipient given (PRIVMSG)\r\n"
+		);
+
+		return;
+	}
+
 	size_t space = params.find(' ');
 
+	// Destinataire présent mais aucun message
 	if (space == std::string::npos)
 	{
-		std::cout << "PRIVMSG : ERROR" << std::endl;
+		std::cout << "PRIVMSG : ERROR (no text)" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 412 "
+			+ client.getNickname()
+			+ " :No text to send\r\n"
+		);
+
 		return;
 	}
 
@@ -178,6 +335,21 @@ void Server::handlePrivmsg(int clientFd, const std::string& line)
 	if (!message.empty() && message[0] == ':')
 		message.erase(0, 1);
 
+	// Message vide
+	if (message.empty())
+	{
+		std::cout << "PRIVMSG : ERROR (no text)" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 412 "
+			+ client.getNickname()
+			+ " :No text to send\r\n"
+		);
+
+		return;
+	}
+
 	Command commandHandler;
 
 	if (!commandHandler.privmsg(client, target, message))
@@ -185,6 +357,10 @@ void Server::handlePrivmsg(int clientFd, const std::string& line)
 		std::cout << "PRIVMSG : ERROR" << std::endl;
 		return;
 	}
+
+	// ==========================
+	// PRIVMSG vers un channel
+	// ==========================
 
 	if (!target.empty() && target[0] == '#')
 	{
@@ -245,6 +421,11 @@ void Server::handlePrivmsg(int clientFd, const std::string& line)
 				  << target
 				  << std::endl;
 	}
+
+	// ==========================
+	// PRIVMSG vers un utilisateur
+	// ==========================
+
 	else
 	{
 		int targetFd = findClientFdByNickname(target);
