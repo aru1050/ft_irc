@@ -26,11 +26,10 @@ void quitCommand(
     while (it != channels.end())
     {
         /*
-            Si le client est dans ce channel,
-            on le retire.
-        */
-        if (it->second.hasClient(clientFd))
-            it->second.removeClient(clientFd);
+            On nettoie le client du channel :
+            membre, opérateur ou invitation.
+         */
+        it->second.removeClient(clientFd);
 
         /*
             Si plus personne n'est dans le channel,
