@@ -6,7 +6,7 @@
 /*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/29 20:17:36 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/29 21:37:46 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,15 +163,18 @@ void Server::handleClientData(size_t i)
 
     ssize_t bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
 
-    // Cas d'erreur ou de fermeture de connexion par le client
     if (bytesRead <= 0)
     {
         if (bytesRead == 0)
             std::cout << "client " << clientFd << " has closed connection" << std::endl;
         else
-            perror("recv() failed");
-        this->disconnectClient(i);
-        return;
+		{
+			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+				return;
+			perror("recv() failed");
+			disconnectClient(i);
+			return;
+		}
     }
     // Assurer la terminaison de la chaîne reçue
     buffer[bytesRead] = '\0';
@@ -271,9 +274,9 @@ void Server::startLoop(){
 		int c = poll(&this->_pollVec[0], this->_pollVec.size(), -1);
 		if (c == -1)
 		{
-			if (this->_running == false)
+			if (this->_running == false || errno == EINTR)
                 break;
-			std::cout<<"pool: failed" << std::endl;
+			perror("poll failed");
 			close(this->_socketFd);
 			throw Server::initNetworkException();
 		}
@@ -306,7 +309,7 @@ void Server::startLoop(){
 
 				if(!recivedbuffer.empty())
 				{
-					size_t sent = send(clientFd, recivedbuffer.c_str(), recivedbuffer.size(), 0);
+					size_t sent = send(clientFd, recivedbuffer.c_str(), recivedbuffer.size(), MSG_NOSIGNAL);
 					if (sent > 0){
 						recivedbuffer.erase(0, sent);
 					}
