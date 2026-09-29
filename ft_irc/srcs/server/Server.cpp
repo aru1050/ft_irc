@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/27 14:15:05 by marvin           ###   ########.fr       */
+/*   Updated: 2026/09/29 18:38:59 by athamilc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/Server.hpp"
 #include "../../includes/Privmsg.hpp"
+#include "../../includes/Quit.hpp"
 
 bool g_serverRunning = true;
 
@@ -121,6 +122,8 @@ void Server::init_server(const char *port)
 void Server::disconnectClient(size_t i)
 {
 	int clientFd = this->_pollVec[i].fd;
+		// Retire le client de tous les channels
+	quitCommand(clientFd, this->_channel);
 	close(clientFd);
 	this->_pollVec.erase(this->_pollVec.begin() + i);
 	this->_clients.erase(clientFd);
