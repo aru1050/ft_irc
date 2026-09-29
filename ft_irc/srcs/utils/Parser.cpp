@@ -60,75 +60,83 @@ void Server::handlePass(int clientFd, const std::string& line)
 
 void Server::handleUser(int clientFd, const std::string& line)
 {
-	Client& client = this->_clients[clientFd];
+    Client& client = this->_clients[clientFd];
 
-	if (client.isRegistered() || client.hasUser())
-	{
-		std::cout << "USER : ERROR (already registered)" << std::endl;
+    if (client.isRegistered() || client.hasUser())
+    {
+        std::cout << "USER : ERROR (already registered)" << std::endl;
+        sendMessage(clientFd,
+            ":ircserv 462 * :You may not reregister\r\n");
+        return;
+    }
 
-		sendMessage(
-			clientFd,
-			":ircserv 462 * :You may not reregister\r\n"
-		);
-		return;
-	}
+    if (line.size() <= 5)
+    {
+        std::cout << "USER : ERROR" << std::endl;
+        sendMessage(clientFd,
+            ":ircserv 461 * USER :Not enough parameters\r\n");
+        return;
+    }
 
-	if (line.size() <= 5)
-	{
-		std::cout << "USER : ERROR" << std::endl;
+    std::string params = line.substr(5);
 
-		sendMessage(
-			clientFd,
-			":ircserv 461 * USER :Not enough parameters\r\n"
-		);
-		return;
-	}
+    size_t colon = params.find(" :");
 
-	std::string params = line.substr(5);
+    if (colon == std::string::npos)
+    {
+        std::cout << "USER : ERROR" << std::endl;
+        sendMessage(clientFd,
+            ":ircserv 461 * USER :Not enough parameters\r\n");
+        return;
+    }
 
-	size_t space = params.find(' ');
-	size_t colon = params.find(':');
+    std::string beforeColon = params.substr(0, colon);
+    std::string realname = params.substr(colon + 2);
 
-	if (space == std::string::npos || colon == std::string::npos)
-	{
-		std::cout << "USER : ERROR" << std::endl;
+    size_t firstSpace = beforeColon.find(' ');
+    if (firstSpace == std::string::npos)
+    {
+        sendMessage(clientFd,
+            ":ircserv 461 * USER :Not enough parameters\r\n");
+        return;
+    }
 
-		sendMessage(
-			clientFd,
-			":ircserv 461 * USER :Not enough parameters\r\n"
-		);
-		return;
-	}
+    size_t secondSpace = beforeColon.find(' ', firstSpace + 1);
+    if (secondSpace == std::string::npos)
+    {
+        sendMessage(clientFd,
+            ":ircserv 461 * USER :Not enough parameters\r\n");
+        return;
+    }
 
-	std::string username = params.substr(0, space);
-	std::string realname = params.substr(colon + 1);
+    std::string username = beforeColon.substr(0, firstSpace);
+    std::string mode = beforeColon.substr(
+        firstSpace + 1,
+        secondSpace - firstSpace - 1
+    );
+    std::string unused = beforeColon.substr(secondSpace + 1);
 
-	if (username.empty() || realname.empty())
-	{
-		std::cout << "USER : ERROR" << std::endl;
+    if (username.empty()
+        || mode.empty()
+        || unused.empty()
+        || realname.empty())
+    {
+        std::cout << "USER : ERROR" << std::endl;
+        sendMessage(clientFd,
+            ":ircserv 461 * USER :Not enough parameters\r\n");
+        return;
+    }
 
-		sendMessage(
-			clientFd,
-			":ircserv 461 * USER :Not enough parameters\r\n"
-		);
-		return;
-	}
+    Command command;
 
-	Command command;
-
-	if (command.user(client, username, realname))
-	{
-		std::cout << "USER : OK" << std::endl;
-	}
-	else
-	{
-		std::cout << "USER : ERROR" << std::endl;
-
-		sendMessage(
-			clientFd,
-			":ircserv 461 * USER :Not enough parameters\r\n"
-		);
-	}
+    if (command.user(client, username, realname))
+        std::cout << "USER : OK" << std::endl;
+    else
+    {
+        std::cout << "USER : ERROR" << std::endl;
+        sendMessage(clientFd,
+            ":ircserv 461 * USER :Not enough parameters\r\n");
+    }
 }
 
 static std::string toLowerNickname(const std::string& str)
@@ -292,6 +300,19 @@ void Server::handlePrivmsg(int clientFd, const std::string& line)
 {
 	Client &client = this->_clients[clientFd];
 
+
+	if (!client.isRegistered())
+	{
+		std::cout << "PRIVMSG : ERROR (not registered)" << std::endl;
+
+		sendMessage(
+			clientFd,
+			":ircserv 451 * :You have not registered\r\n"
+		);
+
+		return;
+	}
+    
 	std::string params;
 
 	if (line.size() > 8)
