@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: athamilc <athamilc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/29 18:38:59 by athamilc         ###   ########.fr       */
+/*   Updated: 2026/09/29 20:17:36 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,6 +179,12 @@ void Server::handleClientData(size_t i)
 	
 	std::cout << "Buffer reçu du client " << clientFd << " : " << receivedData << std::endl;
 	this->_clients[clientFd].appendBuffer(receivedData);
+	if (this->_clients[clientFd].getBuffer().find("\n") == std::string::npos 
+        && this->_clients[clientFd].getBuffer().size() > 512)
+	{
+		this->_clients[clientFd].clearBufferpos(510, this->_clients[clientFd].getBuffer().size() - 510);
+        this->_clients[clientFd].appendBuffer("\r\n");
+	}
 	size_t pos;
 	while((pos = this->_clients[clientFd].getBuffer().find("\n")) != std::string::npos)
 	{
@@ -187,9 +193,11 @@ void Server::handleClientData(size_t i)
 
 		if (!command.empty() && command[command.size() - 1] == '\r')
             command.erase(command.size() - 1);
-
-		this->commandParser(clientFd, command);
-
+		
+		if (command.size() > 510)
+            command = command.substr(0, 510);
+		if (!command.empty())
+			this->commandParser(clientFd, command);
 		if (this->_clients.find(clientFd) == this->_clients.end())
             break;
 	}
