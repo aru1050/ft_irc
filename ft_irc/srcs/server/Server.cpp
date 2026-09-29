@@ -6,7 +6,7 @@
 /*   By: yabou-da <yabou-da@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 15:11:29 by yabou-da          #+#    #+#             */
-/*   Updated: 2026/09/29 21:37:46 by yabou-da         ###   ########.fr       */
+/*   Updated: 2026/09/29 22:09:50 by yabou-da         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,10 +171,10 @@ void Server::handleClientData(size_t i)
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
 				return;
-			perror("recv() failed");
-			disconnectClient(i);
-			return;
 		}
+		perror("recv() failed");
+		disconnectClient(i);
+		return;
     }
     // Assurer la terminaison de la chaîne reçue
     buffer[bytesRead] = '\0';
