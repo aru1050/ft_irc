@@ -52,10 +52,7 @@ PrivmsgResult privmsgCommand(
         return (PRIVMSG_NO_TEXT);
 
     /*
-        =================================
         MESSAGE VERS UN CHANNEL
-        =================================
-
         Exemple :
         PRIVMSG #general :Salut
     */
@@ -95,10 +92,7 @@ PrivmsgResult privmsgCommand(
     }
 
     /*
-        =================================
         MESSAGE PRIVÉ
-        =================================
-
         Exemple :
         PRIVMSG Bob :Salut
     */
